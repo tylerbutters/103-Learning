@@ -1,0 +1,2 @@
+Input this text to testFile.txt
+Input more text to testFile.txt

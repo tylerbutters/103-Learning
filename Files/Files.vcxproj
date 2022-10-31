@@ -139,7 +139,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Files.cpp" />
+    <ClCompile Include="making-file.cpp" />
+    <ClCompile Include="read-files.cpp" />
+    <ClCompile Include="user-input.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
