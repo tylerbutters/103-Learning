@@ -19,18 +19,29 @@ namespace stdprefixes {
 
 using namespace stdprefixes;
 
-fstream open() 
+fstream openFileForWrite(string fileName) 
 {
-	fstream csvExercise;
-	csvExercise.open("csv-exercise.csv", ios::out | ios::trunc);
-	if (!csvExercise.is_open()) {
+	fstream fileStream;
+	fileStream.open(fileName, ios::out | ios::trunc);
+	if (!fileStream.is_open()) {
 		cout << "file is not open";
 	}
-	return csvExercise;
+	return fileStream;
 }
 
-void write(fstream& csvExercise) 
+bool closeFile(fstream& fileStream) {
+	fileStream.close();
+	if (fileStream.is_open()) {
+		cout << "file is still iopen";
+		return false;
+	}
+	cout << "file closed";
+	return true;
+}
+
+void write(string fileName) 
 {
+	fstream fileStream = openFileForWrite(fileName);
 	string firstName;
 	string lastName;
 	int numEntries;
@@ -43,22 +54,28 @@ void write(fstream& csvExercise)
 		cin >> firstName;
 		cout << "Last name: ";
 		cin >> lastName;
-		csvExercise << firstName << "," << lastName << "\n";
+		fileStream << firstName << "," << lastName << "\n";
 	}
+	closeFile(fileStream);
 }
 
-void read(fstream& csvExercise) 
+void read(string fileName)
 {
-	csvExercise.open("csv-exercise.csv", ios::in | ios::beg);
-	if (!csvExercise.is_open()) {
-		cout << "file is not open";
+	fstream fileStream;
+	fileStream.open(fileName, ios::in | ios::beg);
+	
+	if (!fileStream.is_open()) {
+		cout << "file is not open, exiting";
+		return;
 	}
-
+	cout << "reading";
+	
 	string line, word;
 	vector<string> row;
 	vector<vector<string>> fileContent;
 
-	while (getline(csvExercise, line, '\n')) {
+	while (getline(fileStream, line, '\n')) {
+		cout << "yes";
 		row.clear(); //ensure no content is already in row
 		std::stringstream stream(line);
 		//iterate through each cell
@@ -71,18 +88,18 @@ void read(fstream& csvExercise)
 	//for each row in filecontent
 	for (vector<string> row : fileContent) {
 		//for each word in row
+
 		for (string word : row) {
 			cout << word << '\t';
 		}
 		cout << "\n";
 	}
-	csvExercise.close();
+	closeFile(fileStream);
 }
 
 int main()
 {
-	fstream csvExercise = open();
-	write(csvExercise);
-	read(csvExercise);
-	//close(csvExercise);
+	string fileName = "C:\\Users\\User\\source\\repos\\103-Learning\\CSV\\csv-exercise.csv";
+	write(fileName);
+	read(fileName);
 }

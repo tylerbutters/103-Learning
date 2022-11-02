@@ -35,7 +35,7 @@
 //	csvFileExample.close();
 //
 //	//append sets the stream to the end of the stream and then appends
-//	csvFileExample.open("csv-file-example.csv", ios::out);
+//	csvFileExample.open("csv-file-example.csv", ios::app);
 //	if (!csvFileExample.is_open()) {
 //		cout << "file is not open";
 //		return 0;
