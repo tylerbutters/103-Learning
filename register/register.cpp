@@ -24,6 +24,7 @@ using namespace stdprefixes;
 int main();
 
 void drawLine() {
+	// just draws line
 	cout << "---------------------------------------------------------------------" << '\n';
 }
 
@@ -48,6 +49,7 @@ void createUserAccount(string userDataBaseFile) {
 	cout << '\n' << "[STUDENT = 1] [PARENT = 2] [TEACHER = 3] [ADMIN = 4] [BACK = 0]" << '\n';
 	cin >> accountType;
 
+	// back to main menu
 	if (accountType == "0") {
 		main();
 	}
@@ -57,6 +59,7 @@ void createUserAccount(string userDataBaseFile) {
 	cout << "Create a password: ";
 	cin >> password;
 
+	// writes user input to file
 	userDataBase << username << "," << password << "," << accountType << '\n';
 	userDataBase.close();
 
@@ -89,6 +92,7 @@ void userLogin(string userDataBaseFile) {
 	cout << '\n' << "[STUDENT = 1] [PARENT = 2] [TEACHER = 3] [ADMIN = 4] [BACK = 0]" << '\n';
 	cin >> accountType;
 
+	// back to main menu
 	if (accountType == "0") {
 		main();
 	}
@@ -98,10 +102,11 @@ void userLogin(string userDataBaseFile) {
 	cout << "Enter your password: ";
 	cin >> password;
 
+	// loops through each line of file
 	while (getline(userDataBase, line, '\n')) {
 		row.clear();
 		stringstream stream(line);
-
+		// loops through each column
 		while (getline(stream, word, ',')) {
 			row.push_back(word);
 		}
@@ -137,6 +142,7 @@ void userLogin(string userDataBaseFile) {
 
 int main() {
 	int userChoice;
+	//applies file location to a variable
 	string userDataBaseFile = ("user-database.csv");
 
 	cout << '\n';
