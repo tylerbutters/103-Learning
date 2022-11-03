@@ -84,26 +84,47 @@ void registerNewUser(string userDataBaseFile) {
 	main();
 }
 
-void userLogin(string userDataBaseFile) {
-	fstream userDataBase;
-	int loginAccountType;
-	string databaseRow;
-	string databaseColumn;
+void authenticateUser(vector<vector<string>> databaseContent, string username, string password) {
+	for (vector<string> vectorRow : databaseContent) {
+		if (username == vectorRow.at(0) && password == vectorRow.at(1)) {
+			switch (stoi(vectorRow.at(2))) {
+			case 1:
+				cout << '\n' << "Logged in as student";
+				exit(0);
+				//studentAccount();
+				break;
+			case 2:
+				cout << '\n' << "Logged in as parent";
+				exit(0);
+				//parentAccount();
+				break;
+			case 3:
+				cout << '\n' << "Logged in as teacher";
+				exit(0);
+				//teacherAccount();
+				break;
+			case 4:
+				cout << '\n' << "Logged in as admin";
+				exit(0);
+				//adminAccount();
+				break;
+			case 0:
+				//back to main menu
+				main();
+				break;
+			default:
+				cout << '\n' << "Invalid user type selected";
+				break;
+			}
+		}
+	}
+	databaseContent.clear();
+}
+
+string inputLoginDetails() {
 	string username;
 	string password;
-	vector<string> vectorRow;
-	vector<vector<string>> fileContent;
-
-	userDataBase.open(userDataBaseFile, ios::in | ios::app);
-	
-	if (!userDataBase.is_open()) {
-		cout << "Warning file is not open" << '\n';
-		return;
-	}
-
-	drawLine();
-	cout << "LOGIN" << '\n';
-	drawLine();
+	int loginAccountType;
 
 	cout << '\n' << "Select account type" << '\n';
 	cout << '\n' << "[STUDENT = 1] [PARENT = 2] [TEACHER = 3] [ADMIN = 4] [BACK = 0]" << '\n';
@@ -119,8 +140,17 @@ void userLogin(string userDataBaseFile) {
 	cout << "Enter your password: ";
 	cin >> password;
 
+	return username, password;
+}
+
+vector<vector<string>> loadUsersFromDatabase(fstream& userDatabase) {
+	string databaseRow;
+	string databaseColumn;
+	vector<string> vectorRow;
+	vector<vector<string>> databaseContent;
+
 	// loops through each row of database file
-	while (getline(userDataBase, databaseRow, '\n')) {
+	while (getline(userDatabase, databaseRow, '\n')) {
 		vectorRow.clear();
 		stringstream stream(databaseRow);
 		// loops through each column of database file
@@ -129,41 +159,48 @@ void userLogin(string userDataBaseFile) {
 			vectorRow.push_back(databaseColumn);
 		}
 		//adds the whole vector to a vector matrix with data of entire file
-		fileContent.push_back(vectorRow);
+		databaseContent.push_back(vectorRow);
+	}
+	return databaseContent;
+}
+
+void userLoginInterface(string userDataBaseFile) {
+	fstream userDatabase;
+	bool authenticated = false;
+	int loginAttempts = 3;
+	
+	userDatabase.open(userDataBaseFile, ios::in | ios::app);
+	
+	if (!userDatabase.is_open()) {
+		cout << "Warning file is not open" << '\n';
+		return;
 	}
 
-	for (vector<string> vectorRow : fileContent) {
-		if (username == vectorRow.at(0) && password == vectorRow.at(1)) {
-			switch (stoi(vectorRow.at(2))) {
-			case 1:
-				cout << '\n' << "Logged in as student";
-				//studentAccount();
-				break;
-			case 2:
-				cout << '\n' << "Logged in as parent";
-				//parentAccount();
-				break;
-			case 3:
-				cout << '\n' << "Logged in as teacher";
-				//teacherAccount();
-				break;
-			case 4:
-				cout << '\n' << "Logged in as admin";
-				//adminAccount();
-				break;
-			case 0:
-				//back to main menu
-				main();
-				break;
-			default:
-				cout << '\n' << "Invalid user type selected";
-				break;
-			}
+	vector<vector<string>> databaseContent = loadUsersFromDatabase(userDatabase);
+
+	drawLine();
+	cout << "LOGIN" << '\n';
+	drawLine();
+	
+	//FIX THIS
+	string username, password = inputLoginDetails();
+
+
+	while (authenticated == false && loginAttempts != 0) {
+		authenticateUser(databaseContent, username, password);
+		loginAttempts -= 1;
+		if (loginAttempts != 0) {
+			cout << '\n' << "Wrong username, password or associated account type";
+			cout << '\n' << loginAttempts << " attempts left";
 		}
 	}
 
-	userDataBase.close();
-	fileContent.clear();
+	if (loginAttempts == 0) {
+		cout << '\n' << "0 attempts left! Shutting down application..." << '\n';
+		exit(0);
+	}
+
+	userDatabase.close();
 }
 
 int main() {
@@ -182,13 +219,13 @@ int main() {
 
 	switch (userChoice) {
 	case 1:
-		userLogin(userDataBaseFile);
+		userLoginInterface(userDataBaseFile);
 		break;
 	case 2:
 		registerNewUser(userDataBaseFile);
 		break;
 	case 0:
-		cout << "Application closing...";
+		cout << "Shutting down application..." << '\n';
 		break;
 	default:
 		cout << '\n' << "Please choose one of the options";
