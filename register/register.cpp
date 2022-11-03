@@ -28,8 +28,8 @@ void drawLine() {
 	cout << "---------------------------------------------------------------------" << '\n';
 }
 
-void createUserAccount(string userDataBaseFile) {
-	string accountType = "0";
+void registerNewUser(string userDataBaseFile) {
+	int registerAccountType;
 	string username;
 	string password;
 
@@ -47,11 +47,28 @@ void createUserAccount(string userDataBaseFile) {
 
 	cout << '\n' << "Choose the account you want to create" << '\n';
 	cout << '\n' << "[STUDENT = 1] [PARENT = 2] [TEACHER = 3] [ADMIN = 4] [BACK = 0]" << '\n';
-	cin >> accountType;
+	cin >> registerAccountType;
 
-	// back to main menu
-	if (accountType == "0") {
+	switch (registerAccountType) {
+	case 1:
+		cout << '\n' << "Student selected" << '\n';
+		break;
+	case 2:
+		cout << '\n' << "Parent selected" << '\n';
+		break;
+	case 3:
+		cout << '\n' << "Teacher selected" << '\n';
+		break;
+	case 4:
+		cout << '\n' << "Admin selected" << '\n';
+		break;
+	case 0:
+		// back to main menu
 		main();
+		break;
+	default:
+		cout << '\n' << "Invalid user type selected";
+		break;
 	}
 
 	cout << "Create a username: ";
@@ -60,7 +77,7 @@ void createUserAccount(string userDataBaseFile) {
 	cin >> password;
 
 	// writes user input to file
-	userDataBase << username << "," << password << "," << accountType << '\n';
+	userDataBase << username << "," << password << "," << registerAccountType << '\n';
 	userDataBase.close();
 
 	cout << '\n' << "Account created!" << '\n';
@@ -69,12 +86,12 @@ void createUserAccount(string userDataBaseFile) {
 
 void userLogin(string userDataBaseFile) {
 	fstream userDataBase;
-	string accountType;
-	string line;
-	string word;
+	int loginAccountType;
+	string databaseRow;
+	string databaseColumn;
 	string username;
 	string password;
-	vector<string> row;
+	vector<string> vectorRow;
 	vector<vector<string>> fileContent;
 
 	userDataBase.open(userDataBaseFile, ios::in | ios::app);
@@ -90,10 +107,10 @@ void userLogin(string userDataBaseFile) {
 
 	cout << '\n' << "Select account type" << '\n';
 	cout << '\n' << "[STUDENT = 1] [PARENT = 2] [TEACHER = 3] [ADMIN = 4] [BACK = 0]" << '\n';
-	cin >> accountType;
+	cin >> loginAccountType;
 
 	// back to main menu
-	if (accountType == "0") {
+	if (loginAccountType == 0) {
 		main();
 	}
 
@@ -102,20 +119,22 @@ void userLogin(string userDataBaseFile) {
 	cout << "Enter your password: ";
 	cin >> password;
 
-	// loops through each line of file
-	while (getline(userDataBase, line, '\n')) {
-		row.clear();
-		stringstream stream(line);
-		// loops through each column
-		while (getline(stream, word, ',')) {
-			row.push_back(word);
+	// loops through each row of database file
+	while (getline(userDataBase, databaseRow, '\n')) {
+		vectorRow.clear();
+		stringstream stream(databaseRow);
+		// loops through each column of database file
+		while (getline(stream, databaseColumn, ',')) {
+			//appends data from database into vector
+			vectorRow.push_back(databaseColumn);
 		}
-		fileContent.push_back(row);
+		//adds the whole vector to a vector matrix with data of entire file
+		fileContent.push_back(vectorRow);
 	}
 
-	for (vector<string> row : fileContent) {
-		if (username == row.at(0) && password == row.at(1)) {
-			switch (stoi(row.at(2))) {
+	for (vector<string> vectorRow : fileContent) {
+		if (username == vectorRow.at(0) && password == vectorRow.at(1)) {
+			switch (stoi(vectorRow.at(2))) {
 			case 1:
 				cout << '\n' << "Logged in as student";
 				//studentAccount();
@@ -131,6 +150,13 @@ void userLogin(string userDataBaseFile) {
 			case 4:
 				cout << '\n' << "Logged in as admin";
 				//adminAccount();
+				break;
+			case 0:
+				//back to main menu
+				main();
+				break;
+			default:
+				cout << '\n' << "Invalid user type selected";
 				break;
 			}
 		}
@@ -154,16 +180,18 @@ int main() {
 	cout << '\n' << "[LOGIN = 1] [REGISTER = 2] [EXIT = 0]" << '\n';
 	cin >> userChoice;
 
-	switch (userChoice)
-	{
+	switch (userChoice) {
 	case 1:
 		userLogin(userDataBaseFile);
 		break;
 	case 2:
-		createUserAccount(userDataBaseFile);
+		registerNewUser(userDataBaseFile);
 		break;
 	case 0:
 		cout << "Application closing...";
+		break;
+	default:
+		cout << '\n' << "Please choose one of the options";
 		break;
 	}
 }
