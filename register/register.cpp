@@ -21,7 +21,7 @@ namespace stdprefixes {
 
 using namespace stdprefixes;
 
-int main();
+void printMainMenu();
 
 struct UserInfo {
 	int accountType;
@@ -62,27 +62,27 @@ UserInfo getRegistrationDetailsFromUser() {
 
 	switch (userRegistrationDetails.accountType) {
 	case 1:
-		cout << '\n' << "Student selected" << '\n';
+		cout << "Student selected" << '\n';
 		break;
 	case 2:
-		cout << '\n' << "Parent selected" << '\n';
+		cout << "Parent selected" << '\n';
 		break;
 	case 3:
-		cout << '\n' << "Teacher selected" << '\n';
+		cout << "Teacher selected" << '\n';
 		break;
 	case 4:
-		cout << '\n' << "Admin selected" << '\n';
+		cout << "Admin selected" << '\n';
 		break;
 	case 0:
 		// back to main menu
-		main();
+		printMainMenu();
 		break;
 	default:
 		cout << '\n' << "Invalid user type selected";
 		break;
 	}
 
-	cout << "Create a username: ";
+	cout << '\n' << "Create a username: ";
 	cin >> userRegistrationDetails.username;
 	cout << "Create a password: ";
 	cin >> userRegistrationDetails.password;
@@ -91,17 +91,20 @@ UserInfo getRegistrationDetailsFromUser() {
 }
 
 void registerNewUserThenReturn() {
+	// assigns new user info into struct
 	UserInfo userRegistrationDetails = getRegistrationDetailsFromUser();
 
 	addUserToDatabase(userRegistrationDetails.accountType, userRegistrationDetails.username, userRegistrationDetails.password);
 
 	cout << '\n' << "Account created!" << '\n';
-	main();
+	printMainMenu();
 }
 
-bool authenticateUser(vector<vector<string>> databaseContent, UserInfo userInfoToAuthenticate) {
-	for (vector<string> vectorRow : databaseContent) {
-		if (userInfoToAuthenticate.username == vectorRow.at(0) && userInfoToAuthenticate.password == vectorRow.at(1)) {
+bool authenticateUser(vector<UserInfo> userList, UserInfo userInfoToAuthenticate) {
+	// goes through each row of user vector
+	for (UserInfo user : userList) {
+		//checks if inputed details match in database
+		if (userInfoToAuthenticate.username == user.username && userInfoToAuthenticate.password == user.password && userInfoToAuthenticate.accountType == user.accountType) {
 			return true;
 		}
 	}
@@ -113,21 +116,16 @@ bool authenticateUser(vector<vector<string>> databaseContent, UserInfo userInfoT
 UserInfo getLoginDetailsFromUser() {
 	UserInfo loginDetailsFromUser;
 
-	cout << '\n';
-	drawLine();
-	cout << "LOGIN" << '\n';
-	drawLine();
-
 	cout << '\n' << "Select account type" << '\n';
 	cout << '\n' << "[STUDENT = 1] [PARENT = 2] [TEACHER = 3] [ADMIN = 4] [BACK = 0]" << '\n';
 	cin >> loginDetailsFromUser.accountType;
 
 	// back to main menu
 	if (loginDetailsFromUser.accountType == 0) {
-		main();
+		printMainMenu();
 	}
 
-	cout << "Enter your username: ";
+	cout << '\n' << "Enter your username: ";
 	cin >> loginDetailsFromUser.username;
 	cout << "Enter your password: ";
 	cin >> loginDetailsFromUser.password;
@@ -135,11 +133,11 @@ UserInfo getLoginDetailsFromUser() {
 	return loginDetailsFromUser;
 }
 
-vector<vector<string>> loadAllUsers() {
+vector<UserInfo> loadAllUsers() {
 	string databaseRow;
-	string databaseColumn;
-	vector<string> vectorRow;
-	vector<vector<string>> databaseContent;
+	string databaseCell;
+	//vector<string> vectorRow;
+	vector<UserInfo> userList;
 
 	fstream userDatabase;
 	
@@ -151,25 +149,45 @@ vector<vector<string>> loadAllUsers() {
 
 	// loops through each row of database file
 	while (getline(userDatabase, databaseRow, '\n')) {
-		vectorRow.clear();
+		UserInfo info;
+		//vectorRow.clear();
 		stringstream stream(databaseRow);
 		// loops through each column of database file
-		while (getline(stream, databaseColumn, ',')) {
-			//appends data from database into vector
-			vectorRow.push_back(databaseColumn);
+		int i = 1;
+		while (getline(stream, databaseCell, ',')) {
+			
+			//FIX
+			if (i == 1) {
+				info.username = databaseCell;
+			}
+			if (i == 2) {
+				info.password = databaseCell;
+			}
+			if (i == 3) {
+				info.accountType = std::stoi(databaseCell);
+			}
+			i++;
 		}
+		
+		/*info.username = getline(stream, databaseCell, ',');
+		info.password = getline(stream, databaseCell, ',');
+		info.accountType = getline(stream, databaseCell, ',');*/
 		//adds the whole vector to a vector matrix with data of entire file
-		databaseContent.push_back(vectorRow);
+		userList.push_back(info);
 	}
 	userDatabase.close();
 
-	return databaseContent;
+	return userList;
 }
 
 void getLoginDetailsFromUserAndAuthenticate() {
 	int loginAttempts = 3;
+	vector<UserInfo> allUsers = loadAllUsers();
 
-	vector<vector<string>> allUsers = loadAllUsers();
+	cout << '\n';
+	drawLine();
+	cout << "LOGIN" << '\n';
+	drawLine();
 
 	while (loginAttempts > 0) {
 		UserInfo userLoginDetails = getLoginDetailsFromUser();
@@ -225,4 +243,6 @@ void printMainMenu() {
 
 int main() {
 	printMainMenu();
+	 
+	cout << '\n' << "Logged in!" << '\n';
 }
