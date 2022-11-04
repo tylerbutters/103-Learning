@@ -23,22 +23,33 @@ using namespace stdprefixes;
 
 int main();
 
+struct UserInfo {
+	int accountType;
+	string username;
+	string password;
+};
+
+string g_userDatabaseFile = ("user-database.csv");
+
 void drawLine() {
 	// just draws line
 	cout << "---------------------------------------------------------------------" << '\n';
 }
 
-void registerNewUser(string userDataBaseFile) {
-	int registerAccountType;
-	string username;
-	string password;
+void addUserToDatabase(int accountType, string username, string password) {
+	fstream userDatabase(g_userDatabaseFile, ios::in | ios::app);
 
-	fstream userDataBase(userDataBaseFile, ios::in | ios::app);
-	
-	if (!userDataBase.is_open()) {
-		cout << "Warning file is not open." << '\n';
-		return;
+	if (!userDatabase.is_open()) {
+		throw std::runtime_error("Warning file is not open");
 	}
+
+	// writes user input to file
+	userDatabase << username << "," << password << "," << accountType << '\n';
+	userDatabase.close();
+}
+
+UserInfo getRegistrationDetailsFromUser() {
+	UserInfo userRegistrationDetails;
 
 	cout << '\n';
 	drawLine();
@@ -47,9 +58,9 @@ void registerNewUser(string userDataBaseFile) {
 
 	cout << '\n' << "Choose the account you want to create" << '\n';
 	cout << '\n' << "[STUDENT = 1] [PARENT = 2] [TEACHER = 3] [ADMIN = 4] [BACK = 0]" << '\n';
-	cin >> registerAccountType;
+	cin >> userRegistrationDetails.accountType;
 
-	switch (registerAccountType) {
+	switch (userRegistrationDetails.accountType) {
 	case 1:
 		cout << '\n' << "Student selected" << '\n';
 		break;
@@ -72,82 +83,71 @@ void registerNewUser(string userDataBaseFile) {
 	}
 
 	cout << "Create a username: ";
-	cin >> username;
+	cin >> userRegistrationDetails.username;
 	cout << "Create a password: ";
-	cin >> password;
+	cin >> userRegistrationDetails.password;
 
-	// writes user input to file
-	userDataBase << username << "," << password << "," << registerAccountType << '\n';
-	userDataBase.close();
+	return userRegistrationDetails;
+}
+
+void registerNewUserThenReturn() {
+	UserInfo userRegistrationDetails = getRegistrationDetailsFromUser();
+
+	addUserToDatabase(userRegistrationDetails.accountType, userRegistrationDetails.username, userRegistrationDetails.password);
 
 	cout << '\n' << "Account created!" << '\n';
 	main();
 }
 
-void authenticateUser(vector<vector<string>> databaseContent, string username, string password) {
+bool authenticateUser(vector<vector<string>> databaseContent, UserInfo userInfoToAuthenticate) {
 	for (vector<string> vectorRow : databaseContent) {
-		if (username == vectorRow.at(0) && password == vectorRow.at(1)) {
-			switch (stoi(vectorRow.at(2))) {
-			case 1:
-				cout << '\n' << "Logged in as student";
-				exit(0);
-				//studentAccount();
-				break;
-			case 2:
-				cout << '\n' << "Logged in as parent";
-				exit(0);
-				//parentAccount();
-				break;
-			case 3:
-				cout << '\n' << "Logged in as teacher";
-				exit(0);
-				//teacherAccount();
-				break;
-			case 4:
-				cout << '\n' << "Logged in as admin";
-				exit(0);
-				//adminAccount();
-				break;
-			case 0:
-				//back to main menu
-				main();
-				break;
-			default:
-				cout << '\n' << "Invalid user type selected";
-				break;
-			}
+		if (userInfoToAuthenticate.username == vectorRow.at(0) && userInfoToAuthenticate.password == vectorRow.at(1)) {
+			return true;
 		}
 	}
-	databaseContent.clear();
+	// databaseContent.clear();
+
+	return false;
 }
 
-string inputLoginDetails() {
-	string username;
-	string password;
-	int loginAccountType;
+UserInfo getLoginDetailsFromUser() {
+	UserInfo loginDetailsFromUser;
+
+	cout << '\n';
+	drawLine();
+	cout << "LOGIN" << '\n';
+	drawLine();
 
 	cout << '\n' << "Select account type" << '\n';
 	cout << '\n' << "[STUDENT = 1] [PARENT = 2] [TEACHER = 3] [ADMIN = 4] [BACK = 0]" << '\n';
-	cin >> loginAccountType;
+	cin >> loginDetailsFromUser.accountType;
 
 	// back to main menu
-	if (loginAccountType == 0) {
+	if (loginDetailsFromUser.accountType == 0) {
 		main();
 	}
 
 	cout << "Enter your username: ";
-	cin >> username;
+	cin >> loginDetailsFromUser.username;
 	cout << "Enter your password: ";
-	cin >> password;
+	cin >> loginDetailsFromUser.password;
 
-	return username, password;
+	return loginDetailsFromUser;
 }
 
-vector<vector<string>> loadUsersFromDatabase(fstream& userDatabase) {
+vector<vector<string>> loadAllUsers() {
 	string databaseRow;
 	string databaseColumn;
 	vector<string> vectorRow;
 	vector<vector<string>> databaseContent;
+
+	fstream userDatabase;
+	
+	userDatabase.open(g_userDatabaseFile, ios::in | ios::app);
+
+	if (!userDatabase.is_open()) {
+		throw std::runtime_error("Warning file is not open");
+	}
 
 	// loops through each row of database file
 	while (getline(userDatabase, databaseRow, '\n')) {
@@ -161,52 +161,37 @@ vector<vector<string>> loadUsersFromDatabase(fstream& userDatabase) {
 		//adds the whole vector to a vector matrix with data of entire file
 		databaseContent.push_back(vectorRow);
 	}
+	userDatabase.close();
+
 	return databaseContent;
 }
 
-void userLoginInterface(string userDataBaseFile) {
-	fstream userDatabase;
-	bool authenticated = false;
+void getLoginDetailsFromUserAndAuthenticate() {
 	int loginAttempts = 3;
-	
-	userDatabase.open(userDataBaseFile, ios::in | ios::app);
-	
-	if (!userDatabase.is_open()) {
-		cout << "Warning file is not open" << '\n';
-		return;
-	}
 
-	vector<vector<string>> databaseContent = loadUsersFromDatabase(userDatabase);
+	vector<vector<string>> allUsers = loadAllUsers();
 
-	drawLine();
-	cout << "LOGIN" << '\n';
-	drawLine();
-	
-	//FIX THIS
-	string username, password = inputLoginDetails();
+	while (loginAttempts > 0) {
+		UserInfo userLoginDetails = getLoginDetailsFromUser();
+		bool isAuthenticated = authenticateUser(allUsers, userLoginDetails);
 
-
-	while (authenticated == false && loginAttempts != 0) {
-		authenticateUser(databaseContent, username, password);
-		loginAttempts -= 1;
-		if (loginAttempts != 0) {
-			cout << '\n' << "Wrong username, password or associated account type";
-			cout << '\n' << loginAttempts << " attempts left";
+		if (isAuthenticated) {
+			return;
 		}
+
+		loginAttempts--;
+		cout << '\n' << "Wrong username, password or associated account type";
+		cout << '\n' << loginAttempts << " attempts left";
 	}
 
 	if (loginAttempts == 0) {
-		cout << '\n' << "0 attempts left! Shutting down application..." << '\n';
+		cout << '\n' << "Shutting down application..." << '\n';
 		exit(0);
 	}
-
-	userDatabase.close();
 }
 
-int main() {
+int getMainMenuChoiceFromUser() {
 	int userChoice;
-	//applies file location to a variable
-	string userDataBaseFile = ("user-database.csv");
 
 	cout << '\n';
 	drawLine();
@@ -217,18 +202,27 @@ int main() {
 	cout << '\n' << "[LOGIN = 1] [REGISTER = 2] [EXIT = 0]" << '\n';
 	cin >> userChoice;
 
-	switch (userChoice) {
+	return userChoice;
+}
+
+void printMainMenu() {
+	switch (getMainMenuChoiceFromUser()) {
 	case 1:
-		userLoginInterface(userDataBaseFile);
+		getLoginDetailsFromUserAndAuthenticate();
 		break;
 	case 2:
-		registerNewUser(userDataBaseFile);
+		registerNewUserThenReturn();
 		break;
 	case 0:
 		cout << "Shutting down application..." << '\n';
 		break;
 	default:
 		cout << '\n' << "Please choose one of the options";
+		printMainMenu();
 		break;
 	}
+}
+
+int main() {
+	printMainMenu();
 }
